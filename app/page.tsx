@@ -1,11 +1,25 @@
 'use client';
 import { useConnect, useWalletManifests } from '@/app/wrappers';
 import { useInfo } from '@/app/fetchers';
+import ValGrid from '@/app/ValGrid'
+import AssetGrid from './AssetGrid';
+
+import { TransportProvider } from "@connectrpc/connect-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { getPenumbraUnsafe } from '@penumbra-zone/client';
+import { usePenumbraTransportSync } from '@penumbra-zone/react/hooks/use-penumbra-transport';
+import { PenumbraContextProvider } from '@penumbra-zone/react';
+import { assertGlobalPresent, assertProviderConnected, assertProviderManifest } from '@penumbra-zone/client/assert';
+import LiquidityGrid from './LiquidityGrid';
 
 export default function Home() {
   const { data: wallets, loading } = useWalletManifests();
   const { connectionLoading, connected, onConnect, onDisconnect } = useConnect();
   const { address, balances } = useInfo(connected);
+  const ts = usePenumbraTransportSync()
+  const qc = new QueryClient();
+  // const pm = assertProviderConnected('chrome-extension://lkpmkhpnhknhmibgnmmhdhgdilepfghe')
+  // const pm = getPenumbraUnsafe(Object.entries(wallets)[0][0]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -54,6 +68,18 @@ export default function Home() {
               <li key={index}>{balance}</li>
             ))}
           </ul>
+          <div>{connected}</div>
+          <div>
+            <PenumbraContextProvider penumbra={assertProviderConnected(connected)} makeApprovalRequest>
+              <TransportProvider transport={ts}>
+                <QueryClientProvider client={qc}>
+                  <ValGrid wallet={connected}/>
+                  <LiquidityGrid wallet={connected}/>
+                  <AssetGrid wallet={connected}/>
+                </QueryClientProvider>
+              </TransportProvider>
+            </PenumbraContextProvider>
+          </div>
         </section>
       )}
     </main>

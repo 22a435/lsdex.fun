@@ -1,4 +1,4 @@
-import { ViewService } from '@penumbra-zone/protobuf';
+import { ViewService, StakeService } from '@penumbra-zone/protobuf';
 import { createPenumbraClient } from '@penumbra-zone/client/create';
 import { bech32mAddress } from '@penumbra-zone/bech32m/penumbra';
 import { joinLoHiAmount } from '@penumbra-zone/types/amount';
