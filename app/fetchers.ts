@@ -1,3 +1,5 @@
+'use client';
+
 import { ViewService, StakeService } from '@penumbra-zone/protobuf';
 import { createPenumbraClient } from '@penumbra-zone/client/create';
 import { bech32mAddress } from '@penumbra-zone/bech32m/penumbra';

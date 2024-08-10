@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { PenumbraState } from '@penumbra-zone/client';
 import { assertGlobalPresent, assertProvider, assertProviderManifest } from '@penumbra-zone/client/assert';
