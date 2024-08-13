@@ -1,78 +1,26 @@
 'use client';
-// import dynamic from 'next/dynamic'
 
-// import Image from "next/image";
-// import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the Data Grid
-// import { ColDef } from 'ag-grid-community';
-// import { AgGridReact } from "ag-grid-react";
-import React, { useEffect, useState, useMemo } from 'react';
-// import { createConnectTransport } from "@connectrpc/connect-web";
-
-// import dynamic from 'next/dynamic'
- 
-// const agd = dynamic(() => import('@ag-grid-community/react'), {
-//   ssr: false,
-// })
+import React, { useMemo } from 'react';
 import { AgGridReact } from '@ag-grid-community/react';
 import { ColDef } from '@ag-grid-community/core';
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import "@ag-grid-community/styles/ag-grid.css"
 import "@ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme applied to the Data Grid
-// import { createChannelTransport } from '@penumbra-zone/transport-dom/create';
-// import { TransportProvider } from "@connectrpc/connect-query";
-// import { useQuery, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-// import { useQuery } from '@connectrpc/connect-query'
-// import { ViewService, jsonOptions, StakeService, DexService, SimulationService } from '@penumbra-zone/protobuf';
-// import { createPromiseClient } from '@connectrpc/connect';
-// import { createChannelTransport } from '@penumbra-zone/transport-dom/create';
-// import { assertProvider } from '@penumbra-zone/client/create';
-// import { bech32mAddress } from '@penumbra-zone/bech32m/penumbra';
 import { bech32mIdentityKey } from '@penumbra-zone/bech32m/penumbravalid';
-
-// import { getMetadataFromBalancesResponseOptional, getAmount } from '@penumbra-zone/getters/balances-response';
-// import { getValidatorInfo } from '@penumbra-zone/getters/validator-info-response';
-import { type ValidatorInfoResponse, type ValidatorInfo } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/stake/v1/stake_pb';
-import { addAmounts, fromString, toDecimalExchangeRate, formatAmount, joinLoHiAmount } from '@penumbra-zone/types/amount';
+import { type ValidatorInfo } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/stake/v1/stake_pb';
+import { addAmounts, fromString, toDecimalExchangeRate, formatAmount } from '@penumbra-zone/types/amount';
 import { Amount } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/num/v1/num_pb';
-import { useValidators, useBalances, useAssets, useSimulations, simQuery } from './hooks';
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
 import { Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
-// import { addressByIndex } from "@buf/penumbra-zone_penumbra.connectrpc_query-es/penumbra/view/v1/view-ViewService_connectquery";
-// import { Outlet } from 'react-router-dom';
-// import { PenumbraProvider } from '@penumbra-zone/react';
-// import { usePenumbraTransportSync } from '@penumbra-zone/react/hooks/use-penumbra-transport';
-// import { TransportProvider } from '@connectrpc/connect-query';
-// import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// import { usePenumbraServiceSync } from '@penumbra-zone/react/hooks/use-penumbra-service';
 
 export default function ValGrid({ assets, balances, umPrices, validators }:{assets: Map<string, Metadata>, balances: Map<string, Amount>, umPrices: Map<string, Amount>, validators: ValidatorInfo[]}) {
-  // const getValidators = useValidators(wallet);
-  // const getBalances = useBalances(wallet);
-  // const getAssets = useAssets({},wallet,false);
   const denoms = new Map(Array.from(assets).map(([k,v]) => {
     return [bech32mAssetId(v.penumbraAssetId!), k]
   }))
-  // console.log(getAssets())
-  // const getBalances = useBalances(wallet);
-  // const getUSDSims = useSimulations(Array.from(getAssets()).map(([k,v]) => {
-  //   return simQuery(v.penumbraAssetId!,getAssets().get("transfer/channel-2/uusdc")?.penumbraAssetId!,fromString("1000000"))
-  // }), wallet)
-  // const getUUMSims = useSimulations(validators.map(v => {
-  //   return simQuery(
-  //     assets.get(`udelegation_${bech32mIdentityKey(v.validator?.identityKey!)}`)?.penumbraAssetId!,
-  //     assets.get("upenumbra")?.penumbraAssetId!,
-  //     fromString("1000000")
-  //   )
-  // }), wallet)
 
   const getOrElseZero = (x: string, y: Map<string, Amount>) => {
     return y.has(x) ? y.get(x)! : fromString("0")
   }
-  // const getUSDValues = new Map(getUSDSims().map(r => [getDenom().get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
-  // const getUUMValues = new Map(getUUMSims().map(r => [denoms.get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
-  
-  // console.log(getBalances())
-  // console.log(getAssets())
 
   const t8 = fromString("100000000")
   interface ValRow {
@@ -130,13 +78,5 @@ export default function ValGrid({ assets, balances, umPrices, validators }:{asse
       columnDefs={colDefs}
       modules={[ClientSideRowModelModule]}
     />
-  </div> 
- 
-  // const AgGridReact = dynamic(() =>
-  //   import('@ag-grid-community/react').then((mod) => mod.AgGridReact<MarketRow>),{ssr: false}
-  // )
-  // const v = useQuery(StakeService.methods.validatorInfo)
-
-
-
+  </div>
 }
