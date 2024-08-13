@@ -1,79 +1,23 @@
 'use client';
-// import dynamic from 'next/dynamic'
 
-// import Image from "next/image";
-// import "ag-grid-community/styles/ag-grid.css"; // Mandatory CSS required by the Data Grid
-// import { ColDef } from 'ag-grid-community';
-// import { AgGridReact } from "ag-grid-react";
-import React, { useEffect, useState, useMemo } from 'react';
-// import { createConnectTransport } from "@connectrpc/connect-web";
-
-// import dynamic from 'next/dynamic'
-
-// const agd = dynamic(() => import('@ag-grid-community/react'), {
-//   ssr: false,
-// })
+import React, { useMemo } from 'react';
 import { AgGridReact } from '@ag-grid-community/react';
 import { ColDef } from '@ag-grid-community/core';
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
 import "@ag-grid-community/styles/ag-grid.css"
 import "@ag-grid-community/styles/ag-theme-quartz.css"; // Optional Theme applied to the Data Grid
-// import { createChannelTransport } from '@penumbra-zone/transport-dom/create';
-// import { TransportProvider } from "@connectrpc/connect-query";
-// import { useQuery, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-// import { useQuery } from '@connectrpc/connect-query'
-// import { ViewService, jsonOptions, StakeService, DexService, SimulationService } from '@penumbra-zone/protobuf';
-// import { createPromiseClient } from '@connectrpc/connect';
-// import { createChannelTransport } from '@penumbra-zone/transport-dom/create';
-// import { assertProvider } from '@penumbra-zone/client/create';
-// import { bech32mAddress } from '@penumbra-zone/bech32m/penumbra';
-import { bech32mIdentityKey } from '@penumbra-zone/bech32m/penumbravalid';
-
-// import { getMetadataFromBalancesResponseOptional, getAmount } from '@penumbra-zone/getters/balances-response';
-// import { getValidatorInfo } from '@penumbra-zone/getters/validator-info-response';
-import { type ValidatorInfoResponse, type ValidatorInfo } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/stake/v1/stake_pb';
-import { addAmounts, fromString, toDecimalExchangeRate, formatAmount, joinLoHiAmount, divideAmounts, multiplyAmountByNumber } from '@penumbra-zone/types/amount';
+import { fromString, formatAmount, divideAmounts, multiplyAmountByNumber } from '@penumbra-zone/types/amount';
 import { Amount } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/num/v1/num_pb';
-import { useAssets, useBalances, useLiquidity, useSpread, useSpreads } from './hooks';
-
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
-import { AssetId, Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
+import { Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
 import { Position } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/dex/v1/dex_pb';
 
-// import { ValueView } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb.js';
-
-
-
-// import { addressByIndex } from "@buf/penumbra-zone_penumbra.connectrpc_query-es/penumbra/view/v1/view-ViewService_connectquery";
-// import { Outlet } from 'react-router-dom';
-// import { PenumbraProvider } from '@penumbra-zone/react';
-// import { usePenumbraTransportSync } from '@penumbra-zone/react/hooks/use-penumbra-transport';
-// import { TransportProvider } from '@connectrpc/connect-query';
-// import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// import { usePenumbraServiceSync } from '@penumbra-zone/react/hooks/use-penumbra-service';
 
 export default function LiquidityGrid({ assets, liquidity }: { assets: Map<string, Metadata>, liquidity: Position[] }) {
-  // const getAssets = useAssets({
-  // filtered: true,
-  // includeLpNfts: true,
-  // includeDelegationTokens: true,
-  // includeProposalNfts: false,
-  // includeUnbondingTokens: false,
-  // includeVotingReceiptTokens: true
-  // }, wallet, true);
-  // const getBalances = useBalances(wallet);
-  // const getSpreads = useSpreads(getAssets(), wallet);
-  // console.log(assets);
-  // console.log(Array.from(getSpreads().entries()).filter(x => x[1].approxEffectivePrice1To2 != 0));
-  // const getSpread = useSpread("penumbra", "transfer/channel-2/uusdc", wallet)
-  // console.log(getSpread().values())
-  // const getLiquidity = useLiquidity(wallet);
-  // const getAssets = useAssets({},wallet,false);
+  
   const getDenom = new Map(Array.from(assets).map(([k,v]) => {
     return [bech32mAssetId(v.penumbraAssetId!), k]
   }))
-
-
 
   const t8 = fromString("100000000")
   interface LiquidityRow {
@@ -87,20 +31,8 @@ export default function LiquidityGrid({ assets, liquidity }: { assets: Map<strin
     Asset1: string;
     Asset2: string;
     State: string;
-
-    // IdentityKey: string;
-    // Delegations: number;
-    // Commission: number;
-    // RewardRate: number;
-    // ExchangeRate: number;
-    // Balance: number;
-    // ExchValue: number;
   }
 
-  // const getStake = (balances: Map<string, Amount>, v: ValidatorInfo): number => {
-  //   const b = balances.get(`delUM(${bech32mIdentityKey(v.validator?.identityKey!).slice(14)})`)
-  //   return b ? parseFloat(formatAmount({amount:b, exponent: 6, decimalPlaces: 3})) : 0
-  // }
   const rowData: LiquidityRow[] = liquidity.map(lp => {
     const Fee = lp.phi?.component?.fee!;
     const P = lp.phi?.component?.p!;
@@ -122,11 +54,6 @@ export default function LiquidityGrid({ assets, liquidity }: { assets: Map<strin
       Asset1: sym1,
       Asset2: sym2,
       State: lp.state?.state.toString()!
-      // MetaData: v.toJsonString(),
-      // Symbol: v.symbol,
-      // Description: v.description,
-      // AssetId: bech32mAssetId(v.penumbraAssetId!)
-
     }
   });
   const colDefs = useMemo<ColDef<LiquidityRow, any>[]>(() => [
@@ -159,14 +86,6 @@ export default function LiquidityGrid({ assets, liquidity }: { assets: Map<strin
       headerName: 'Asset2', field: 'Asset2'
     },
     { headerName: 'State', field: 'State' }
-    // { headerName: 'IdentityKey', field: 'IdentityKey', hide: true },
-    // { headerName: 'Delegations', field: 'Delegations' },
-    // { headerName: 'Commission', field: 'Commission', hide: true },
-    // { headerName: 'RewardRate', valueFormatter: p =>
-    //   (p.data?.RewardRate!*100).toFixed(2)+"%", field: 'RewardRate' },
-    // { headerName: 'ExchangeRate', field: 'ExchangeRate' },
-    // { headerName: 'Balance', field: 'Balance' },
-    // { headerName: 'ExchValue', field: 'ExchValue' }
   ], []);
 
   const defaultColDef = useMemo(() => {
@@ -181,12 +100,4 @@ export default function LiquidityGrid({ assets, liquidity }: { assets: Map<strin
       modules={[ClientSideRowModelModule]}
     />
   </div>
-
-  // const AgGridReact = dynamic(() =>
-  //   import('@ag-grid-community/react').then((mod) => mod.AgGridReact<MarketRow>),{ssr: false}
-  // )
-  // const v = useQuery(StakeService.methods.validatorInfo)
-
-
-
 }
