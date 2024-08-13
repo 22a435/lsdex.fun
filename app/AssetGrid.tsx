@@ -9,7 +9,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 // import { createConnectTransport } from "@connectrpc/connect-web";
 
 // import dynamic from 'next/dynamic'
- 
+
 // const agd = dynamic(() => import('@ag-grid-community/react'), {
 //   ssr: false,
 // })
@@ -37,7 +37,7 @@ import { Amount } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/nu
 import { simQuery, useAssets, useBalances, useSimulations, useSpread, useSpreads } from './hooks';
 
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
-import { AssetId } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
+import { AssetId, Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
 
 // import { addressByIndex } from "@buf/penumbra-zone_penumbra.connectrpc_query-es/penumbra/view/v1/view-ViewService_connectquery";
 // import { Outlet } from 'react-router-dom';
@@ -47,32 +47,32 @@ import { AssetId } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/a
 // import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { usePenumbraServiceSync } from '@penumbra-zone/react/hooks/use-penumbra-service';
 
-export default function AssetGrid({ wallet }:{wallet?: string}) {
-  const getAssets = useAssets({
-    // filtered: true,
-    // includeLpNfts: true,
-    // includeDelegationTokens: true,
-    // includeProposalNfts: false,
-    // includeUnbondingTokens: false,
-    // includeVotingReceiptTokens: true
-  }, wallet, true);
-  const getDenom = () => new Map(Array.from(getAssets()).map(([k,v]) => {
+export default function AssetGrid({ assets, balances, usdPrices, umPrices }: { assets: Map<string, Metadata>, balances: Map<string, Amount>, usdPrices: Map<string, Amount>, umPrices: Map<string, Amount> }) {
+  // const getAssets = useAssets({
+  // filtered: true,
+  // includeLpNfts: true,
+  // includeDelegationTokens: true,
+  // includeProposalNfts: false,
+  // includeUnbondingTokens: false,
+  // includeVotingReceiptTokens: true
+  // }, wallet, true);
+  const denoms = new Map(Array.from(assets).map(([k, v]) => {
     return [bech32mAssetId(v.penumbraAssetId!), k]
   }))
-  const getBalances = useBalances(wallet);
-  const getUSDSims = useSimulations(Array.from(getAssets()).map(([k,v]) => {
-    return simQuery(v.penumbraAssetId!,getAssets().get("transfer/channel-2/uusdc")?.penumbraAssetId!,fromString("1000000"))
-  }), wallet)
-  const getUUMSims = useSimulations(Array.from(getAssets()).map(([k,v]) => {
-    return simQuery(v.penumbraAssetId!,getAssets().get("upenumbra")?.penumbraAssetId!,fromString("1000000"))
-  }), wallet)
+  // const getBalances = useBalances(wallet);
+  // const getUSDSims = useSimulations(Array.from(assets).map(([k, v]) => {
+  //   return simQuery(v.penumbraAssetId!, assets.get("transfer/channel-2/uusdc")?.penumbraAssetId!, fromString("1000000"))
+  // }), wallet)
+  // const getUUMSims = useSimulations(Array.from(assets).map(([k, v]) => {
+  //   return simQuery(v.penumbraAssetId!, assets.get("upenumbra")?.penumbraAssetId!, fromString("1000000"))
+  // }), wallet)
 
   const getOrElseZero = (x: string, y: Map<string, Amount>) => {
     return y.has(x) ? y.get(x)! : fromString("0")
   }
-  const getUSDValues = new Map(getUSDSims().map(r => [getDenom().get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
-  const getUUMValues = new Map(getUUMSims().map(r => [getDenom().get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
-  const getSpreads = useSpreads(getAssets(), wallet);
+  // const getUSDValues = new Map(getUSDSims().map(r => [denoms.get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
+  // const getUUMValues = new Map(getUUMSims().map(r => [denoms.get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
+  // const getSpreads = useSpreads(assets, wallet);
   // console.log(assets);
   // console.log(Array.from(getSpreads().entries()).filter(x => x[1].approxEffectivePrice1To2 != 0));
   // const getSpread = useSpread("penumbra", "transfer/channel-2/uusdc", wallet)
@@ -96,12 +96,13 @@ export default function AssetGrid({ wallet }:{wallet?: string}) {
     // Balance: number;
     // ExchValue: number;
   }
-  
+
   // const getStake = (balances: Map<string, Amount>, v: ValidatorInfo): number => {
   //   const b = balances.get(`delUM(${bech32mIdentityKey(v.validator?.identityKey!).slice(14)})`)
   //   return b ? parseFloat(formatAmount({amount:b, exponent: 6, decimalPlaces: 3})) : 0
   // }
-  const rowData:AssetRow[] = Array.from(getAssets()).map(([k,v]) => {
+  const rowData: AssetRow[] = Array.from(assets).filter(p => 
+    p[1].base.startsWith("transfer") || p[1].base == "upenumbra").map(([k, v]) => {
     return {
       Base: k,
       MetaData: v.toJsonString(),
@@ -109,8 +110,8 @@ export default function AssetGrid({ wallet }:{wallet?: string}) {
       Name: v.name,
       Description: v.description,
       AssetId: v.penumbraAssetId!,
-      USDValue: getOrElseZero(v.base, getUSDValues),
-      UUMValue: getOrElseZero(v.base, getUUMValues)
+      USDValue: getOrElseZero(v.base, usdPrices),
+      UUMValue: getOrElseZero(v.base, umPrices)
 
       // IdentityKey: bech32mIdentityKey(v.validator?.identityKey!),
       // Delegations: parseInt(formatAmount({amount:v.status?.votingPower!,exponent:6})),
@@ -123,19 +124,22 @@ export default function AssetGrid({ wallet }:{wallet?: string}) {
   });
   const colDefs = useMemo<ColDef<AssetRow, any>[]>(() => [
     { headerName: 'Base', field: 'Base' },
-    { headerName: 'MetaData', field: 'MetaData', hide: true},
+    { headerName: 'MetaData', field: 'MetaData', hide: true },
     { headerName: 'Symbol', field: 'Symbol' },
     { headerName: 'Name', field: 'Name' },
     { headerName: 'Description', field: 'Description', hide: true },
-    { headerName: 'AssetId', field: 'AssetId', valueFormatter: p =>
-      bech32mAssetId(p.data?.AssetId!)
+    {
+      headerName: 'AssetId', field: 'AssetId', valueFormatter: p =>
+        bech32mAssetId(p.data?.AssetId!)
 
-     },
-    { headerName: '$ Price', field: 'USDValue', valueFormatter: p =>
-      formatAmount({amount: p.data?.USDValue!, exponent: 6})
     },
-    { headerName: 'UM Price', field: 'UUMValue', valueFormatter: p =>
-      formatAmount({amount: p.data?.UUMValue!, exponent: 6})
+    {
+      headerName: '$ Price', field: 'USDValue', valueFormatter: p =>
+        formatAmount({ amount: p.data?.USDValue!, exponent: 6 })
+    },
+    {
+      headerName: 'UM Price', field: 'UUMValue', valueFormatter: p =>
+        formatAmount({ amount: p.data?.UUMValue!, exponent: 6 })
     }
     // { headerName: 'IdentityKey', field: 'IdentityKey', hide: true },
     // { headerName: 'Delegations', field: 'Delegations' },
@@ -158,8 +162,8 @@ export default function AssetGrid({ wallet }:{wallet?: string}) {
       columnDefs={colDefs}
       modules={[ClientSideRowModelModule]}
     />
-  </div> 
- 
+  </div>
+
   // const AgGridReact = dynamic(() =>
   //   import('@ag-grid-community/react').then((mod) => mod.AgGridReact<MarketRow>),{ssr: false}
   // )

@@ -36,6 +36,7 @@ import { addAmounts, fromString, toDecimalExchangeRate, formatAmount, joinLoHiAm
 import { Amount } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/num/v1/num_pb';
 import { useValidators, useBalances, useAssets, useSimulations, simQuery } from './hooks';
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
+import { Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
 // import { addressByIndex } from "@buf/penumbra-zone_penumbra.connectrpc_query-es/penumbra/view/v1/view-ViewService_connectquery";
 // import { Outlet } from 'react-router-dom';
 // import { PenumbraProvider } from '@penumbra-zone/react';
@@ -44,31 +45,31 @@ import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
 // import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { usePenumbraServiceSync } from '@penumbra-zone/react/hooks/use-penumbra-service';
 
-export default function ValGrid({ wallet }:{wallet?: string}) {
-  const getValidators = useValidators(wallet);
-  const getBalances = useBalances(wallet);
-  const getAssets = useAssets({},wallet,false);
-  const getDenom = () => new Map(Array.from(getAssets()).map(([k,v]) => {
+export default function ValGrid({ assets, balances, umPrices, validators }:{assets: Map<string, Metadata>, balances: Map<string, Amount>, umPrices: Map<string, Amount>, validators: ValidatorInfo[]}) {
+  // const getValidators = useValidators(wallet);
+  // const getBalances = useBalances(wallet);
+  // const getAssets = useAssets({},wallet,false);
+  const denoms = new Map(Array.from(assets).map(([k,v]) => {
     return [bech32mAssetId(v.penumbraAssetId!), k]
   }))
-  console.log(getAssets())
+  // console.log(getAssets())
   // const getBalances = useBalances(wallet);
   // const getUSDSims = useSimulations(Array.from(getAssets()).map(([k,v]) => {
   //   return simQuery(v.penumbraAssetId!,getAssets().get("transfer/channel-2/uusdc")?.penumbraAssetId!,fromString("1000000"))
   // }), wallet)
-  const getUUMSims = useSimulations(getValidators().map(v => {
-    return simQuery(
-      getAssets().get(`udelegation_${bech32mIdentityKey(v.validator?.identityKey!)}`)?.penumbraAssetId!,
-      getAssets().get("upenumbra")?.penumbraAssetId!,
-      fromString("1000000")
-    )
-  }), wallet)
+  // const getUUMSims = useSimulations(validators.map(v => {
+  //   return simQuery(
+  //     assets.get(`udelegation_${bech32mIdentityKey(v.validator?.identityKey!)}`)?.penumbraAssetId!,
+  //     assets.get("upenumbra")?.penumbraAssetId!,
+  //     fromString("1000000")
+  //   )
+  // }), wallet)
 
   const getOrElseZero = (x: string, y: Map<string, Amount>) => {
     return y.has(x) ? y.get(x)! : fromString("0")
   }
   // const getUSDValues = new Map(getUSDSims().map(r => [getDenom().get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
-  const getUUMValues = new Map(getUUMSims().map(r => [getDenom().get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
+  // const getUUMValues = new Map(getUUMSims().map(r => [denoms.get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
   
   // console.log(getBalances())
   // console.log(getAssets())
@@ -83,14 +84,14 @@ export default function ValGrid({ wallet }:{wallet?: string}) {
     ExchangeRate: number;
     Balance: number;
     ExchValue: number;
-    SwapValue: Amount;
+    SwapPrice: Amount;
   }
   
   const getStake = (balances: Map<string, Amount>, v: ValidatorInfo): number => {
     const b = balances.get(`udelegation_${bech32mIdentityKey(v.validator?.identityKey!)}`)
     return b ? parseFloat(formatAmount({amount:b, exponent: 6, decimalPlaces: 3})) : 0
   }
-  const rowData:ValRow[] = Array.from(getValidators()).map(v => {
+  const rowData:ValRow[] = Array.from(validators).map(v => {
     return {
       Name: v.validator?.name!,
       IdentityKey: bech32mIdentityKey(v.validator?.identityKey!),
@@ -98,9 +99,9 @@ export default function ValGrid({ wallet }:{wallet?: string}) {
       Commission: 0,//sum(v.validator?.fundingStreams.map(f => f.recipient.value)),
       RewardRate: (Math.pow(toDecimalExchangeRate(addAmounts(t8, v.rateData?.validatorRewardRate!)),182)-1),
       ExchangeRate: toDecimalExchangeRate(v.rateData?.validatorExchangeRate!),
-      Balance: getStake(getBalances(), v),
-      ExchValue: getStake(getBalances(),v)*toDecimalExchangeRate(v.rateData?.validatorExchangeRate!),
-      SwapValue: getOrElseZero(`udelegation_${bech32mIdentityKey(v.validator?.identityKey!)}`, getUUMValues)
+      Balance: getStake(balances, v),
+      ExchValue: getStake(balances,v)*toDecimalExchangeRate(v.rateData?.validatorExchangeRate!),
+      SwapPrice: getOrElseZero(`udelegation_${bech32mIdentityKey(v.validator?.identityKey!)}`, umPrices)
     }
   });
   const colDefs = useMemo<ColDef<ValRow, any>[]>(() => [
@@ -113,8 +114,8 @@ export default function ValGrid({ wallet }:{wallet?: string}) {
     { headerName: 'ExchangeRate', field: 'ExchangeRate' },
     { headerName: 'Balance', field: 'Balance' },
     { headerName: 'Unbond Value (UM)', field: 'ExchValue' },
-    { headerName: 'Swap Price (del(UM)/UM)', field: 'SwapValue', valueFormatter: p =>
-      formatAmount({amount: p.data?.SwapValue!, exponent: 6})
+    { headerName: 'Swap Price (del(UM)/UM)', field: 'SwapPrice', valueFormatter: p =>
+      formatAmount({amount: p.data?.SwapPrice!, exponent: 6})
     }
   ], []);
 

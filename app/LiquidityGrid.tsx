@@ -37,7 +37,8 @@ import { Amount } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/nu
 import { useAssets, useBalances, useLiquidity, useSpread, useSpreads } from './hooks';
 
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
-import { AssetId } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
+import { AssetId, Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
+import { Position } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/dex/v1/dex_pb';
 
 // import { ValueView } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb.js';
 
@@ -51,7 +52,7 @@ import { AssetId } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/a
 // import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { usePenumbraServiceSync } from '@penumbra-zone/react/hooks/use-penumbra-service';
 
-export default function LiquidityGrid({ wallet }: { wallet?: string }) {
+export default function LiquidityGrid({ assets, liquidity }: { assets: Map<string, Metadata>, liquidity: Position[] }) {
   // const getAssets = useAssets({
   // filtered: true,
   // includeLpNfts: true,
@@ -66,9 +67,9 @@ export default function LiquidityGrid({ wallet }: { wallet?: string }) {
   // console.log(Array.from(getSpreads().entries()).filter(x => x[1].approxEffectivePrice1To2 != 0));
   // const getSpread = useSpread("penumbra", "transfer/channel-2/uusdc", wallet)
   // console.log(getSpread().values())
-  const getLiquidity = useLiquidity(wallet);
-  const getAssets = useAssets({},wallet,false);
-  const getDenom = new Map(Array.from(getAssets()).map(([k,v]) => {
+  // const getLiquidity = useLiquidity(wallet);
+  // const getAssets = useAssets({},wallet,false);
+  const getDenom = new Map(Array.from(assets).map(([k,v]) => {
     return [bech32mAssetId(v.penumbraAssetId!), k]
   }))
 
@@ -100,16 +101,16 @@ export default function LiquidityGrid({ wallet }: { wallet?: string }) {
   //   const b = balances.get(`delUM(${bech32mIdentityKey(v.validator?.identityKey!).slice(14)})`)
   //   return b ? parseFloat(formatAmount({amount:b, exponent: 6, decimalPlaces: 3})) : 0
   // }
-  const rowData: LiquidityRow[] = getLiquidity().map(lp => {
+  const rowData: LiquidityRow[] = liquidity.map(lp => {
     const Fee = lp.phi?.component?.fee!;
     const P = lp.phi?.component?.p!;
     const Q = lp.phi?.component?.q!;
     const R1 = lp.reserves?.r1!;
     const R2 = lp.reserves?.r2!;
-    const sym1 = getAssets().get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset1!))!)?.symbol!;
-    const base1 = getAssets().get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset1!))!)?.base!;
-    const sym2 = getAssets().get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset2!))!)?.symbol!;
-    const base2 = getAssets().get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset2!))!)?.base!;
+    const sym1 = assets.get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset1!))!)?.symbol!;
+    const base1 = assets.get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset1!))!)?.base!;
+    const sym2 = assets.get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset2!))!)?.symbol!;
+    const base2 = assets.get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset2!))!)?.base!;
     return {
       Fee: Fee,
       P: P,
