@@ -4,7 +4,7 @@ import { Amount } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/nu
 import { AssetId } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
-import { SimulateTradeRequest, SimulateTradeRequest_Routing_SingleHop, SimulateTradeResponse } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/dex/v1/dex_pb';
+import { SimulateTradeRequest, SimulateTradeResponse } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/dex/v1/dex_pb';
 import { client } from './penumbra';
 
 export const simQuery = (a: AssetId, b: AssetId, size: Amount): SimulateTradeRequest => {
@@ -13,8 +13,7 @@ export const simQuery = (a: AssetId, b: AssetId, size: Amount): SimulateTradeReq
       amount: size,
       assetId: a
     },
-    output: b,
-    routing: {setting: {case: "singleHop", value: SimulateTradeRequest_Routing_SingleHop}}
+    output: b
   })
 }
 
