@@ -3,7 +3,7 @@ import { ViewService } from '@penumbra-zone/protobuf';
 import { bech32mAddress } from '@penumbra-zone/bech32m/penumbra';
 import { joinLoHiAmount } from '@penumbra-zone/types/amount';
 import { getMetadataFromBalancesResponseOptional, getAmount } from '@penumbra-zone/getters/balances-response';
-import { client } from './penumbra';
+import { client } from '@/src/lib/penumbra';
 
 
 export const fetchAddress = async (account: number): Promise<string | undefined> => {

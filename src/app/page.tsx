@@ -1,7 +1,7 @@
 'use client';
-import { useConnect, useWalletManifests } from '@/app/hooks';
-import { useInfo } from '@/app/fetchers';
-import App from './App';
+import { useConnect, useWalletManifests } from '@/src/lib/hooks';
+import { useInfo } from '@/src/lib/fetchers';
+import App from '@/src/app/App';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function Home() {
@@ -60,7 +60,7 @@ export default function Home() {
           <div>{connected}</div>
           <div>
             <QueryClientProvider client={qc}>
-              <App connected={connected}/>
+              <App/>
             </QueryClientProvider>
           </div>
         </section>

@@ -30,6 +30,7 @@ export default function AssetGrid({ assets, balances, usdPrices, umPrices }: { a
     AssetId: AssetId;
     USDValue: Amount;
     UUMValue: Amount;
+    Balance: Amount;
   }
 
   const rowData: AssetRow[] = Array.from(assets).filter(p =>
@@ -42,7 +43,8 @@ export default function AssetGrid({ assets, balances, usdPrices, umPrices }: { a
         Description: v.description,
         AssetId: v.penumbraAssetId!,
         USDValue: getOrElseZero(v.base, usdPrices),
-        UUMValue: getOrElseZero(v.base, umPrices)
+        UUMValue: getOrElseZero(v.base, umPrices),
+        Balance: getOrElseZero(v.base, balances)
       }
     });
   const colDefs = useMemo<ColDef<AssetRow, any>[]>(() => [
@@ -63,6 +65,10 @@ export default function AssetGrid({ assets, balances, usdPrices, umPrices }: { a
     {
       headerName: 'UM Price', field: 'UUMValue', valueFormatter: p =>
         formatAmount({ amount: p.data?.UUMValue!, exponent: 6 })
+    },
+    {
+      headerName: 'Balance', field: 'Balance', valueFormatter: p =>
+        formatAmount({ amount: p.data?.Balance!, exponent: 6})
     }
   ], []);
 
