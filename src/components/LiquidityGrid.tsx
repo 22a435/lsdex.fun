@@ -13,8 +13,8 @@ import { Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/
 import { Position } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/dex/v1/dex_pb';
 
 
-export default function LiquidityGrid({ assets, liquidity }: { assets: Map<string, Metadata>, liquidity: Position[] }) {
-  
+export default function LiquidityGrid({ assets, liquidity, ownedIds }: { assets: Map<string, Metadata>, liquidity: Map<string,Position>, ownedIds: Set<string> }) {
+
   const getDenom = new Map(Array.from(assets).map(([k,v]) => {
     return [bech32mAssetId(v.penumbraAssetId!), k]
   }))
@@ -31,9 +31,10 @@ export default function LiquidityGrid({ assets, liquidity }: { assets: Map<strin
     Asset1: string;
     Asset2: string;
     State: string;
+    Owned: boolean;
   }
 
-  const rowData: LiquidityRow[] = liquidity.map(lp => {
+  const rowData: LiquidityRow[] = Array.from(liquidity).map(([pid, lp]) => {
     const Fee = lp.phi?.component?.fee!;
     const P = lp.phi?.component?.p!;
     const Q = lp.phi?.component?.q!;
@@ -47,37 +48,45 @@ export default function LiquidityGrid({ assets, liquidity }: { assets: Map<strin
       Fee: Fee,
       P: P,
       Q: Q,
-      Bid: `${divideAmounts(multiplyAmountByNumber(P,1-parseFloat(Fee.toString())/10000),Q).toFixed(4)} : ${divideAmounts(multiplyAmountByNumber(P,1+parseFloat(Fee.toString())/10000),Q).toFixed(4)}`,
-      Ask: `${divideAmounts(multiplyAmountByNumber(Q,1-parseFloat(Fee.toString())/10000),P).toFixed(4)} : ${divideAmounts(multiplyAmountByNumber(Q,1+parseFloat(Fee.toString())/10000),P).toFixed(4)}`,
+      Bid: `${divideAmounts(multiplyAmountByNumber(P, 1 - parseFloat(Fee.toString()) / 10000), Q).toFixed(4)} : ${divideAmounts(multiplyAmountByNumber(P, 1 + parseFloat(Fee.toString()) / 10000), Q).toFixed(4)}`,
+      Ask: `${divideAmounts(multiplyAmountByNumber(Q, 1 - parseFloat(Fee.toString()) / 10000), P).toFixed(4)} : ${divideAmounts(multiplyAmountByNumber(Q, 1 + parseFloat(Fee.toString()) / 10000), P).toFixed(4)}`,
       R1: R1,
       R2: R2,
       Asset1: sym1,
       Asset2: sym2,
-      State: lp.state?.state.toString()!
+      State: lp.state?.state.toString()!,
+      Owned: ownedIds.has(pid)
     }
   });
   const colDefs = useMemo<ColDef<LiquidityRow, any>[]>(() => [
-    { headerName: 'Fee', field: 'Fee', valueFormatter: p =>
-      `${(parseFloat(p.data?.Fee?.toString()!)/100).toFixed(2)!}%`
+    {
+      headerName: 'Fee', field: 'Fee', valueFormatter: p =>
+        `${(parseFloat(p.data?.Fee?.toString()!) / 100).toFixed(2)!}%`
     },
-    { headerName: 'P', field: 'P', hide: true, valueFormatter: p =>
-      formatAmount({amount: p.data?.P!})
+    {
+      headerName: 'P', field: 'P', hide: true, valueFormatter: p =>
+        formatAmount({ amount: p.data?.P! })
     },
-    { headerName: 'Q', field: 'Q', hide: true, valueFormatter: p =>
-      formatAmount({amount: p.data?.Q!})
+    {
+      headerName: 'Q', field: 'Q', hide: true, valueFormatter: p =>
+        formatAmount({ amount: p.data?.Q! })
     },
-    { headerName: 'R1/R2', field: 'Bid', valueFormatter: p =>
-      p.data?.Bid!
+    {
+      headerName: 'R1/R2', field: 'Bid', valueFormatter: p =>
+        p.data?.Bid!
     },
-    { headerName: 'R2/R1', field: 'Ask', valueFormatter: p =>
-      p.data?.Ask!
+    {
+      headerName: 'R2/R1', field: 'Ask', valueFormatter: p =>
+        p.data?.Ask!
     },
 
-    { headerName: 'R1', field: 'R1' , valueFormatter: p =>
-      formatAmount({amount: p.data?.R1!, exponent: 6})
+    {
+      headerName: 'R1', field: 'R1', valueFormatter: p =>
+        formatAmount({ amount: p.data?.R1!, exponent: 6 })
     },
-    { headerName: 'R2', field: 'R2' , valueFormatter: p =>
-      formatAmount({amount: p.data?.R2!, exponent: 6})
+    {
+      headerName: 'R2', field: 'R2', valueFormatter: p =>
+        formatAmount({ amount: p.data?.R2!, exponent: 6 })
     },
     {
       headerName: 'Asset1', field: 'Asset1'
@@ -85,7 +94,8 @@ export default function LiquidityGrid({ assets, liquidity }: { assets: Map<strin
     {
       headerName: 'Asset2', field: 'Asset2'
     },
-    { headerName: 'State', field: 'State' }
+    { headerName: 'State', field: 'State' },
+    { headerName: 'Owned', field: 'Owned' }
   ], []);
 
   const defaultColDef = useMemo(() => {

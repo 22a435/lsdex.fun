@@ -5,8 +5,8 @@ import { getMetadataFromBalancesResponse, getAmount } from '@penumbra-zone/gette
 import { Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
 import { useQuery } from '@tanstack/react-query';
 import type { PartialMessage } from "@bufbuild/protobuf";
+import {bech32mPositionId} from "@penumbra-zone/bech32m/plpid"
 import { client } from '@/src/lib/penumbra'
-import { PositionId, PositionState_PositionStateEnum } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/dex/v1/dex_pb';
 
 export const useAssets = (filter: PartialMessage<AssetsRequest>): Map<string, Metadata> => {
   const q = useQuery({
@@ -34,14 +34,14 @@ export const useBalances = (account?: number): Map<string, Amount> => {
   return q.isSuccess ? q.data : new Map();
 }
 
-export const useOwnedPositionIds = (): PositionId[] => {
+export const useOwnedPositionIds = (): Set<string> => {
   const q = useQuery({
     queryKey: ['Owned Positions'],
     queryFn: (): Promise<OwnedPositionIdsResponse[]> =>
       Array.fromAsync(client.service(ViewService).ownedPositionIds({
         // positionState: {state: PositionState_PositionStateEnum.OPENED}
       })),
-    select: (data: OwnedPositionIdsResponse[]) => data.map(x => x.positionId!)
+    select: (data: OwnedPositionIdsResponse[]) => new Set(data.map(x => bech32mPositionId(x.positionId!)))
   })
-  return q.isSuccess ? q.data : [];
+  return q.isSuccess ? q.data : new Set();
 }
