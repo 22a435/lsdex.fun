@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ViewService } from '@penumbra-zone/protobuf';
 import { bech32mAddress } from '@penumbra-zone/bech32m/penumbra';
 import { joinLoHiAmount } from '@penumbra-zone/types/amount';
-import { getMetadataFromBalancesResponseOptional, getAmount } from '@penumbra-zone/getters/balances-response';
+import { getMetadataFromBalancesResponse, getAmount } from '@penumbra-zone/getters/balances-response';
 import { client } from '@/src/lib/penumbra';
 
 
@@ -18,7 +18,7 @@ export const fetchBalances = async (account: number): Promise<string[]> => {
   const balances = await Array.fromAsync(iterable);
 
   return balances.map((balance) => {
-    const metadata = getMetadataFromBalancesResponseOptional(balance);
+    const metadata = getMetadataFromBalancesResponse(balance);
     const metadataSymbol = metadata?.symbol;
     const amount = getAmount(balance);
 
