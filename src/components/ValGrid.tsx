@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { AgGridReact } from '@ag-grid-community/react';
 import { ColDef } from '@ag-grid-community/core';
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
@@ -12,13 +12,14 @@ import { addAmounts, fromString, toDecimalExchangeRate, formatAmount } from '@pe
 import { Amount } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/num/v1/num_pb';
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
 import { Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
+import { assetsContext, balancesContext, umPricesContext, validatorsContext } from '../lib/context';
 
-export default function ValGrid({ assets, balances, umPrices, validators }: {
-  assets: Map<string, Metadata>,
-  balances: Map<string, Amount>,
-  umPrices: Map<string, Amount>,
-  validators: ValidatorInfo[]
-}) {
+export default function ValGrid() {
+  const assets = useContext(assetsContext);
+  const balances = useContext(balancesContext);
+  const umPrices = useContext(umPricesContext);
+  const validators = useContext(validatorsContext);
+
   const denoms = new Map(Array.from(assets).map(([k, v]) => {
     return [bech32mAssetId(v.penumbraAssetId!), k]
   }))

@@ -5,7 +5,7 @@ import { getMetadataFromBalancesResponse, getAmount } from '@penumbra-zone/gette
 import { Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
 import { useQuery } from '@tanstack/react-query';
 import type { PartialMessage } from "@bufbuild/protobuf";
-import {bech32mPositionId} from "@penumbra-zone/bech32m/plpid"
+import { bech32mPositionId } from "@penumbra-zone/bech32m/plpid"
 import { client } from '@/src/lib/penumbra'
 
 export const useAssets = (filter: PartialMessage<AssetsRequest>): Map<string, Metadata> => {
@@ -15,7 +15,7 @@ export const useAssets = (filter: PartialMessage<AssetsRequest>): Map<string, Me
       Array.fromAsync(client.service(ViewService).assets(filter)),
     select: (data: AssetsResponse[]) =>
       new Map(data.map(x =>
-        [x.denomMetadata?.base!,x.denomMetadata]))
+        [x.denomMetadata?.base!, x.denomMetadata]))
   })
   return q.isSuccess ? q.data : new Map();
 }
@@ -25,7 +25,7 @@ export const useBalances = (account?: number): Map<string, Amount> => {
     queryKey: ['Balances'],
     queryFn: (): Promise<BalancesResponse[]> =>
       Array.fromAsync(client.service(ViewService).balances({
-        accountFilter: { account: account ? account : 0}
+        accountFilter: { account: account ? account : 0 }
       })),
     select: (data: BalancesResponse[]) =>
       new Map(data.map(x =>

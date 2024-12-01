@@ -11,6 +11,8 @@ import { useValidators } from '@/src/lib/stakeService';
 import { fromString } from '@penumbra-zone/types/amount';
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
 
+import { assetsContext, denomsContext, balancesContext, ownedPositionIdsContext, validatorsContext, liquidityContext, usdPricesContext, umPricesContext } from '@/src/lib/context';
+
 export default function App() {
   const assets = useAssets({});
   const balances = useBalances();
@@ -32,13 +34,30 @@ export default function App() {
   const UMPrices = new Map(UMSims.map(r => [denoms.get(bech32mAssetId(r.output?.input?.assetId!))!, r.output?.output?.amount!]))
 
   return (
-    <div>
-      <h1>Validators</h1>
-      <ValGrid assets={assets} balances={balances} umPrices={UMPrices} validators={validators} />
-      <h1>Assets</h1>
-      <AssetGrid assets={assets} balances={balances} usdPrices={USDPrices} umPrices={UMPrices} />
-      <h1>Liquidity</h1>
-      <LiquidityGrid assets={assets} liquidity={liquidity} ownedIds={ownedPositonIds} />
-    </div>
+    <assetsContext.Provider value={assets}>
+      <denomsContext.Provider value={denoms}>
+        <balancesContext.Provider value={balances}>
+          <ownedPositionIdsContext.Provider value={ownedPositonIds}>
+            <validatorsContext.Provider value={validators}>
+              <liquidityContext.Provider value={liquidity}>
+                <usdPricesContext.Provider value={USDPrices}>
+                  <umPricesContext.Provider value={UMPrices}>
+                    <div>
+                      <h1>Validators</h1>
+                      <ValGrid />
+                      <h1>Assets</h1>
+                      <AssetGrid />
+                      <h1>Liquidity</h1>
+                      <LiquidityGrid />
+                    </div>
+                  </umPricesContext.Provider>
+                </usdPricesContext.Provider>
+              </liquidityContext.Provider>
+            </validatorsContext.Provider>
+          </ownedPositionIdsContext.Provider>
+        </balancesContext.Provider>
+      </denomsContext.Provider>
+    </assetsContext.Provider>
+
   );
 }

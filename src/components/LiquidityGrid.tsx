@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { AgGridReact } from '@ag-grid-community/react';
 import { ColDef } from '@ag-grid-community/core';
 import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model";
@@ -11,9 +11,16 @@ import { Amount } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/nu
 import { bech32mAssetId } from '@penumbra-zone/bech32m/passet';
 import { Metadata } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/asset/v1/asset_pb';
 import { Position } from '@buf/penumbra-zone_penumbra.bufbuild_es/penumbra/core/component/dex/v1/dex_pb';
+import CloseLPButton from './CloseLPButton';
+import { useConnect } from '../lib/hooks';
+import { assetsContext, liquidityContext, ownedPositionIdsContext } from '../lib/context';
 
 
-export default function LiquidityGrid({ assets, liquidity, ownedIds }: { assets: Map<string, Metadata>, liquidity: Map<string,Position>, ownedIds: Set<string> }) {
+export default function LiquidityGrid() {
+
+  const assets = useContext(assetsContext);
+  const liquidity = useContext(liquidityContext);
+  const ownedIds = useContext(ownedPositionIdsContext);
 
   const getDenom = new Map(Array.from(assets).map(([k,v]) => {
     return [bech32mAssetId(v.penumbraAssetId!), k]
@@ -21,6 +28,7 @@ export default function LiquidityGrid({ assets, liquidity, ownedIds }: { assets:
 
   const t8 = fromString("100000000")
   interface LiquidityRow {
+    Id: string;
     Fee: number;
     P: Amount;
     Q: Amount;
@@ -35,6 +43,7 @@ export default function LiquidityGrid({ assets, liquidity, ownedIds }: { assets:
   }
 
   const rowData: LiquidityRow[] = Array.from(liquidity).map(([pid, lp]) => {
+    const Id = pid;
     const Fee = lp.phi?.component?.fee!;
     const P = lp.phi?.component?.p!;
     const Q = lp.phi?.component?.q!;
@@ -45,6 +54,7 @@ export default function LiquidityGrid({ assets, liquidity, ownedIds }: { assets:
     const sym2 = assets.get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset2!))!)?.symbol!;
     const base2 = assets.get(getDenom.get(bech32mAssetId(lp.phi?.pair?.asset2!))!)?.base!;
     return {
+      Id: Id,
       Fee: Fee,
       P: P,
       Q: Q,
@@ -59,6 +69,9 @@ export default function LiquidityGrid({ assets, liquidity, ownedIds }: { assets:
     }
   });
   const colDefs = useMemo<ColDef<LiquidityRow, any>[]>(() => [
+    {
+      headerName: 'Id', field: 'Id'
+    },
     {
       headerName: 'Fee', field: 'Fee', valueFormatter: p =>
         `${(parseFloat(p.data?.Fee?.toString()!) / 100).toFixed(2)!}%`
@@ -79,7 +92,6 @@ export default function LiquidityGrid({ assets, liquidity, ownedIds }: { assets:
       headerName: 'R2/R1', field: 'Ask', valueFormatter: p =>
         p.data?.Ask!
     },
-
     {
       headerName: 'R1', field: 'R1', valueFormatter: p =>
         formatAmount({ amount: p.data?.R1!, exponent: 6 })
@@ -89,13 +101,14 @@ export default function LiquidityGrid({ assets, liquidity, ownedIds }: { assets:
         formatAmount({ amount: p.data?.R2!, exponent: 6 })
     },
     {
-      headerName: 'Asset1', field: 'Asset1'
+      headerName: 'Asset1', field: 'Asset1', filter: true
     },
     {
-      headerName: 'Asset2', field: 'Asset2'
+      headerName: 'Asset2', field: 'Asset2', filter: true
     },
-    { headerName: 'State', field: 'State' },
-    { headerName: 'Owned', field: 'Owned' }
+    { headerName: 'State', field: 'State', filter: true },
+    { headerName: 'Owned', field: 'Owned', filter: true },
+    { headerName: 'Close', cellRenderer: CloseLPButton }
   ], []);
 
   const defaultColDef = useMemo(() => {
